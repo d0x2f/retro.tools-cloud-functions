@@ -1,0 +1,20 @@
+name: CD
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  cd:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && github.ref == 'refs/heads/main'"
+    steps:
+      - uses: actions/checkout@v1
+      - name: Deploy
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only functions
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_ACCOUNT_CREDENTIALS }}
