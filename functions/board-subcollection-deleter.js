@@ -9,8 +9,8 @@ async function deleteCollection(reference) {
   return firestore
     .collection(reference)
     .get()
-    .then((querySnapshot) => {
-      querySnapshot.docs.forEach((snapshot) => snapshot.ref.delete());
+    .then(async (querySnapshot) => {
+      await Promise.all(querySnapshot.docs.map(snapshot => snapshot.ref.delete()));
       return querySnapshot.size;
     });
 }
