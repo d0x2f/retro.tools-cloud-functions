@@ -6,21 +6,11 @@ import "../board-subcollection-deleter.js";
 const captured = vi.hoisted(() => ({ handler: null }));
 const mockFirestore = vi.hoisted(() => ({ collection: vi.fn() }));
 
-vi.mock("firebase-functions", () => ({
-  default: {
-    region: () => ({
-      runWith: () => ({
-        firestore: {
-          document: () => ({
-            onDelete: (fn) => {
-              captured.handler = fn;
-              return {};
-            },
-          }),
-        },
-      }),
-    }),
-  },
+vi.mock("firebase-functions/firestore", () => ({
+  onDocumentDeleted: vi.fn((opts, fn) => {
+    captured.handler = fn;
+    return {};
+  }),
 }));
 
 vi.mock("firebase-functions/logger", () => ({ info: vi.fn() }));
@@ -45,7 +35,7 @@ describe("boardSubcollectionDeleter", () => {
       }),
     }));
 
-    await captured.handler(null, { params: { boardId: "board-1" } });
+    await captured.handler({ params: { boardId: "board-1" } });
 
     expect(mockFirestore.collection).toHaveBeenCalledWith(
       "/boards/board-1/cards"
@@ -67,7 +57,7 @@ describe("boardSubcollectionDeleter", () => {
       }),
     }));
 
-    await captured.handler(null, { params: { boardId: "board-1" } });
+    await captured.handler({ params: { boardId: "board-1" } });
 
     expect(info).toHaveBeenCalledWith(
       { boardId: "board-1", cardsDeleted: 1, columnsDeleted: 0 },
@@ -76,7 +66,7 @@ describe("boardSubcollectionDeleter", () => {
   });
 
   it("exits early and logs when boardId is missing", async () => {
-    await captured.handler(null, { params: {} });
+    await captured.handler({ params: {} });
 
     expect(mockFirestore.collection).not.toHaveBeenCalled();
     expect(info).toHaveBeenCalledWith("No board id found, exiting.");
