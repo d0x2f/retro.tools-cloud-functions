@@ -64,7 +64,9 @@ describe("boardSubcollectionDeleter", () => {
   it("logs the deletion counts", async () => {
     mockFirestore.collection.mockImplementation((path) =>
       path.includes("cards")
-        ? makeCollection([{ ref: { delete: vi.fn().mockResolvedValue(undefined) } }])
+        ? makeCollection([
+            { ref: { delete: vi.fn().mockResolvedValue(undefined) } },
+          ])
         : makeCollection([])
     );
 
@@ -123,7 +125,9 @@ describe("boardSubcollectionDeleter", () => {
       // batch counter advancing rather than resetting.
       return {
         limit: vi.fn().mockReturnValue({
-          get: vi.fn().mockImplementation(() => Promise.resolve(batches[call++])),
+          get: vi
+            .fn()
+            .mockImplementation(() => Promise.resolve(batches[call++])),
         }),
       };
     }
