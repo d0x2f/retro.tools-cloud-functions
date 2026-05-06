@@ -1,4 +1,4 @@
-import firebase from "firebase-functions";
+import { onDocumentDeleted } from "firebase-functions/firestore";
 import Firestore from "@google-cloud/firestore";
 import { info } from "firebase-functions/logger";
 
@@ -16,20 +16,21 @@ async function deleteCollection(reference) {
       return querySnapshot.size;
     });
 }
+
 /*
  Triggered when a board is deleted in firestore.
- It cleans up subcollections such as cards columns.
+ It cleans up subcollections such as cards and columns.
 */
-export const boardSubcollectionDeleter = firebase
-  .region("us-east1")
-  .runWith({
+export const boardSubcollectionDeleter = onDocumentDeleted(
+  {
+    region: "us-east1",
     minInstances: 0,
     maxInstances: 2,
     memory: "128MB",
-  })
-  .firestore.document("boards/{boardId}")
-  .onDelete(async (_change, context) => {
-    const boardId = context.params.boardId;
+    document: "boards/{boardId}",
+  },
+  async (event) => {
+    const boardId = event.params.boardId;
     if (!boardId) {
       info("No board id found, exiting.");
       return;
@@ -39,4 +40,5 @@ export const boardSubcollectionDeleter = firebase
       deleteCollection(`/boards/${boardId}/columns`),
     ]);
     info({ boardId, cardsDeleted, columnsDeleted }, "Deleted board");
-  });
+  }
+);

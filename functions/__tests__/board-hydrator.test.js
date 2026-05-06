@@ -5,21 +5,11 @@ import "../board-hydrator.js";
 // Capture the onCreate handler when the module initialises at import time.
 const captured = vi.hoisted(() => ({ handler: null }));
 
-vi.mock("firebase-functions", () => ({
-  default: {
-    region: () => ({
-      runWith: () => ({
-        firestore: {
-          document: () => ({
-            onCreate: (fn) => {
-              captured.handler = fn;
-              return {};
-            },
-          }),
-        },
-      }),
-    }),
-  },
+vi.mock("firebase-functions/firestore", () => ({
+  onDocumentCreated: vi.fn((opts, fn) => {
+    captured.handler = fn;
+    return {};
+  }),
 }));
 
 vi.mock("firebase-functions/logger", () => ({ info: vi.fn() }));
@@ -36,7 +26,7 @@ describe("boardHydrator", () => {
   it("updates the document with expire_at six months from now", async () => {
     const update = vi.fn().mockResolvedValue(undefined);
 
-    await captured.handler({ id: "board-1", ref: { update } });
+    await captured.handler({ data: { id: "board-1", ref: { update } } });
 
     expect(update).toHaveBeenCalledOnce();
     expect(update).toHaveBeenCalledWith({
@@ -47,7 +37,7 @@ describe("boardHydrator", () => {
   it("logs the board id and expiry date", async () => {
     const update = vi.fn().mockResolvedValue(undefined);
 
-    await captured.handler({ id: "board-1", ref: { update } });
+    await captured.handler({ data: { id: "board-1", ref: { update } } });
 
     expect(info).toHaveBeenCalledOnce();
     expect(info).toHaveBeenCalledWith("board expiry set", {
