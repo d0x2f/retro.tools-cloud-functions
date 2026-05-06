@@ -12,7 +12,7 @@ vi.mock("firebase-functions/firestore", () => ({
   }),
 }));
 
-vi.mock("firebase-functions/logger", () => ({ info: vi.fn() }));
+vi.mock("firebase-functions/logger", () => ({ info: vi.fn(), error: vi.fn() }));
 
 describe("boardHydrator", () => {
   beforeEach(() => {
@@ -43,6 +43,19 @@ describe("boardHydrator", () => {
     expect(info).toHaveBeenCalledWith("board expiry set", {
       expireAt: new Date("2024-07-01T00:00:00.000Z"),
       boardId: "board-1",
+    });
+  });
+
+  it("logs an error and returns early when update fails", async () => {
+    const { error } = await import("firebase-functions/logger");
+    const update = vi.fn().mockRejectedValue(new Error("write failed"));
+
+    await captured.handler({ data: { id: "board-1", ref: { update } } });
+
+    expect(info).not.toHaveBeenCalled();
+    expect(error).toHaveBeenCalledWith("Failed to set board expiry", {
+      boardId: "board-1",
+      err: "write failed",
     });
   });
 });
