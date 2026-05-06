@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { info } from "firebase-functions/logger";
 import "../board-hydrator.js";
 
@@ -24,16 +24,14 @@ vi.mock("firebase-functions", () => ({
 
 vi.mock("firebase-functions/logger", () => ({ info: vi.fn() }));
 
-vi.mock("moment", () => {
-  const fixedDate = new Date("2024-07-01T00:00:00.000Z");
-  const add = vi.fn();
-  const instance = { add, toDate: vi.fn(() => fixedDate) };
-  add.mockReturnValue(instance);
-  return { default: vi.fn(() => instance) };
-});
-
 describe("boardHydrator", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2024-01-01T00:00:00.000Z"));
+  });
+
+  afterEach(() => vi.useRealTimers());
 
   it("updates the document with expire_at six months from now", async () => {
     const update = vi.fn().mockResolvedValue(undefined);

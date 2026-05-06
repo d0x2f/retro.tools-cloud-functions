@@ -1,7 +1,5 @@
 import firebase from "firebase-functions";
 import { info } from "firebase-functions/logger";
-import moment from "moment";
-
 /*
  Triggered when a board is created in firestore.
  It should be used to add fields to the document that aren't required
@@ -16,7 +14,8 @@ export const boardHydrator = firebase
   })
   .firestore.document("boards/{boardId}")
   .onCreate(async (doc) => {
-    const expire_at = moment().add(6, "months").toDate();
+    const expire_at = new Date();
+    expire_at.setMonth(expire_at.getMonth() + 6);
     await doc.ref.update({ expire_at });
     info("board expiry set", { expireAt: expire_at, boardId: doc.id });
   });
