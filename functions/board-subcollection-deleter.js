@@ -10,7 +10,9 @@ async function deleteCollection(reference) {
     .collection(reference)
     .get()
     .then(async (querySnapshot) => {
-      await Promise.all(querySnapshot.docs.map(snapshot => snapshot.ref.delete()));
+      await Promise.all(
+        querySnapshot.docs.map((snapshot) => snapshot.ref.delete())
+      );
       return querySnapshot.size;
     });
 }

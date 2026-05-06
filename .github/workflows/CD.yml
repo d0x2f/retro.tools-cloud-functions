@@ -7,7 +7,26 @@ on:
       - main
 
 jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Use Node.js 24.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+      - name: Install
+        working-directory: functions
+        run: npm install
+      - name: Lint
+        working-directory: functions
+        run: npm run lint
+      - name: Test
+        working-directory: functions
+        run: npm test
+
   cd:
+    needs: ci
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, '[skip ci]') && github.ref == 'refs/heads/main'"
     steps:
