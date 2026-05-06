@@ -1,5 +1,5 @@
 import { onDocumentCreated } from "firebase-functions/firestore";
-import { info } from "firebase-functions/logger";
+import { info, error } from "firebase-functions/logger";
 
 /*
  Triggered when a board is created in firestore.
@@ -17,7 +17,15 @@ export const boardHydrator = onDocumentCreated(
   async (event) => {
     const expire_at = new Date();
     expire_at.setMonth(expire_at.getMonth() + 6);
-    await event.data.ref.update({ expire_at });
+    try {
+      await event.data.ref.update({ expire_at });
+    } catch (err) {
+      error("Failed to set board expiry", {
+        boardId: event.data.id,
+        err: err?.message,
+      });
+      return;
+    }
     info("board expiry set", { expireAt: expire_at, boardId: event.data.id });
   }
 );
